@@ -720,7 +720,12 @@ class EditBlogPostHandler(Handler):
             self.redirect("/{}".format(blog_id))
             return
 
-            # If user requests to delete the post
+        # If the user canceled, go back to the blog
+        elif action == "Cancel":
+            self.redirect("/{}".format(blog_id))
+            return
+
+        # If user requests to delete the post
         else:
             # Deleting its comments
             comments = Comments.get_all_comments(int(blog_id))
