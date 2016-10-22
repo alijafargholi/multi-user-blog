@@ -29,7 +29,6 @@
 
         <div class="col-sm-12 col-md-12 header">
             <h1 class="title">{{ blog.title }}</h1>
-            <h2 class="author"> - by {{ username }}</h2>
         </div>
 
         <div class="col-sm-12 col-md-12">
@@ -40,6 +39,11 @@
         {% set post = blog.blog.replace("\n", '</p><p class="col-lg-12
         blog-post">') %}
         <p class="col-lg-12 blog-post">{{ post }}</p>
+        <br>
+
+        <div class="col-sm-12 col-md-12">
+            <h2 class="author"> - by {{ username }}</h2>
+        </div>
 
 {#       If the user is loged in, let the user add comment, Like or Dislike
          the blog#}
@@ -75,7 +79,8 @@
                           rows="5"
                           name="blogComment"
                           id="comment-box"></textarea>
-                <input class="btn btn-primary btn-lg" type="submit">
+                <input class="btn btn-primary btn-lg" id="submit-comment"
+                       type="submit">
 
             </form>
 

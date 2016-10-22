@@ -55,6 +55,26 @@ h2{
     margin-left: 10px;
 }
 
+.glyphicon-log-in {
+    color: dodgerblue;
+}
+
+.glyphicon-log-out {
+    color: #9C1A1C;
+}
+
+.glyphicon-plus {
+    color: greenyellow;
+}
+
+#submit-comment {
+    margin: 10px 0px;
+}
+
+#new-post {
+    color: chartreuse;
+}
+
 .author {
     float: right;
     padding-top: 2%;

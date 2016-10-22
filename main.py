@@ -292,7 +292,8 @@ class WelcomeHandler(Handler):
                 blogs = NewPost.get_all_blogs(user=None)
 
                 self.render_blogs(username=username,
-                                  blogs=blogs,)
+                                  blogs=blogs,
+                                  )
 
             # Move the user to the home page if they're not logged in.
             else:
@@ -338,13 +339,15 @@ class WelcomeHandler(Handler):
                             blogs.append(blog)
 
             self.render_blogs(username=username,
-                              blogs=blogs,)
+                              blogs=blogs,
+                              )
 
     # Render the home page and populate it with the selected blogs
     def render_blogs(self, username, blogs):
             self.render("welcome.html",
                         username=username,
                         blogs=blogs,
+                        logged_in=True
                         )
 
 
@@ -362,7 +365,7 @@ class SignUpHandler(Handler):
     """
 
     def get(self):
-        self.render('signup.html')
+        self.render('signup.html', logged_in=False)
 
     def post(self):
 
@@ -487,7 +490,7 @@ class NewBlogPostHandler(Handler):
         if user_id:
             user = RegisterUser.get_user(user_id)
             if user:
-                self.render('new_post.html')
+                self.render('new_post.html', logged_in=True)
             else:
                 self.redirect("/login")
         else:
@@ -530,7 +533,8 @@ class NewBlogPostHandler(Handler):
                         blog_error=blog_error,
                         old_des=description,
                         des_error=des_error,
-                        old_tags=tags)
+                        old_tags=tags,
+                        logged_in=True)
             return
 
         # If the blog's inputs are valid, add the blog to the database.
@@ -602,7 +606,8 @@ class ViewBlogPostHandler(Handler):
                     post_date=posted_date,
                     comments=comments,
                     already_voted=already_voted,
-                    can_edit=can_edit)
+                    can_edit=can_edit,
+                    logged_in=True)
 
     def post(self, *args):
         """ Handling the likes, dislike, comments, and edit requests."""
@@ -688,7 +693,8 @@ class EditBlogPostHandler(Handler):
                     old_title=target_blog.title,
                     blog_value=target_blog.blog,
                     old_des=target_blog.description,
-                    old_tags=target_blog.tag)
+                    old_tags=target_blog.tag,
+                    logged_in=True)
 
     def post(self, *args):
 
