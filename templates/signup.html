@@ -1,0 +1,46 @@
+{#BASE HTML TEMPLATE#}
+{% extends "base.html" %}
+
+{#TITLE BLOCK#}
+{% block title %}
+
+    Sign Me Up
+
+{% endblock %}
+
+{#CONTENT BLOCK#}
+{% block content %}
+
+    <h1>Sign me up</h1>
+    <form method="post">
+        <div class="form-group">
+            <label for="user">User Name:</label>
+            <input type="text" class="form-control" id="user"
+                   name="username" placeholder="Enter Username"
+                   value="{{ old_username }}">
+            <div class="error">{{ username_error }}</div>
+        </div>
+        <div class="form-group">
+            <label for="pass">Password:</label>
+            <input type="password" class="form-control" id="pass"
+                   placeholder="Enter Password" name="password">
+            <div class="error">{{ password_error }}</div>
+        </div>
+        <div class="form-group">
+            <label for="ver">Password (verify):</label>
+            <input type="password" class="form-control" id="ver"
+                   placeholder="Re-enter Password" name="verify">
+            <div class="error">{{ verify_error }}</div>
+        </div>
+        <div class="form-group">
+            <label for="emailaddress">Email Address:</label>
+            <input type="text" class="form-control" id="emailaddress"
+                   placeholder="Enter Email" name="email"
+                   value="{{ old_email }}">
+            <div class="error">{{ email_error }}</div>
+        </div>
+        <input type="submit" class="btn btn-primary">
+    </form>
+
+
+{% endblock %}

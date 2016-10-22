@@ -1,0 +1,31 @@
+{#BASE HTML TEMPLATE#}
+{% extends "base.html" %}
+
+{#TITLE BLOCK#}
+{% block title %}
+
+    Sign Me Up
+
+{% endblock %}
+
+{#CONTENT BLOCK#}
+{% block content %}
+
+    <h1>Log In</h1>
+    <form method="post">
+        <div class="form-group">
+            <label for="user">User Name:</label>
+            <input type="text" class="form-control" id="user"
+                   name="username" placeholder="Enter Username"
+                   value="{{ old_username }}">
+        </div>
+        <div class="form-group">
+            <label for="pass">Password:</label>
+            <input type="password" class="form-control" id="pass"
+                   placeholder="Enter Password" name="password">
+        </div>
+        <div class="error">{{ error }}</div>
+        <input type="submit" class="btn btn-primary" name="Let Me In">
+    </form>
+
+{% endblock %}

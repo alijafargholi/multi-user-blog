@@ -1,0 +1,65 @@
+{#BASE HTML TEMPLATE#}
+{% extends "base.html" %}
+
+{#TITLE BLOCK#}
+{% block title %}
+
+    New Blog
+
+{% endblock %}
+
+{#CONTENT BLOCK#}
+{% block content %}
+
+    {% if can_edit %}
+        <h1>Edit Blog</h1>
+        <form method="post">
+
+            <div class="row">
+                <div class="form-group col-md-6 col-xs-12">
+                    <label for="title">Title:</label>
+                    <input type="text" class="form-control" id="title"
+                           name="title" placeholder="Enter Title"
+                           value="{{ old_title }}">
+                    <div class="error">{{ title_error }}</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="blog">Blog:</label>
+                <textarea id="blog"
+                          name="blog"
+                          class="form-control"
+                          rows="15" >{{ blog_value }}
+                </textarea>
+                <div class="error">{{ blog_error }}</div>
+            </div>
+
+            <div class="row">
+                <div class="form-group col-md-6 col-xs-12">
+                    <label for="description" >Description:</label>
+                    <input type="text" class="form-control" id="description"
+                           placeholder="Enter Some Description" name="description"
+                           value="{{ old_des }}">
+                    <div class="error">{{ des_error }}</div>
+                </div>
+
+                <div class="form-group col-md-6 col-xs-12">
+                    <label for="tags">Tags: (optional)</label>
+                    <input type="text" class="form-control" id="tags"
+                           placeholder="Separate Tags With comma (,) " name="tags"
+                           value="{{ old_tags }}">
+                </div>
+            </div>
+
+            <input type="submit" class="btn btn-success btn-lg" name="done"
+                   value="Save">
+            <input type="submit" class="btn btn-danger btn-lg pull-right" name="done"
+                   value="Delete">
+        </form>
+    {% else %}
+        <h1>You're not allowed to edit this blog!</h1>
+    {% endif %}
+
+
+{% endblock %}

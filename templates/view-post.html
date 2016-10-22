@@ -1,0 +1,105 @@
+{#BASE HTML TEMPLATE#}
+{% extends "base.html" %}
+
+{#TITLE BLOCK#}
+{% block title %}
+
+    {{ blog.title }} by {{ username }}
+
+{% endblock %}
+
+{#CONTENT BLOCK#}
+{% block content %}
+
+    <div class="row">
+
+        <div class="article-date col-sm-12  col-md-12">
+            {{ post_date }}
+
+            {% if can_edit %}
+            <form method="post">
+                <input type="submit"
+                       class="btn btn-default btn-lg"
+                       value="Edit"
+                       name="edit">
+            </form>
+            {% endif %}
+
+        </div>
+
+        <div class="col-sm-12 col-md-12 header">
+            <h1 class="title">{{ blog.title }}</h1>
+            <h2 class="author"> - by {{ username }}</h2>
+        </div>
+
+        <div class="col-sm-12 col-md-12">
+            <hr class="divider">
+            <br>
+        </div>
+
+        {% set post = blog.blog.replace("\n", '</p><p class="col-lg-12
+        blog-post">') %}
+        <p class="col-lg-12 blog-post">{{ post }}</p>
+
+{#       If the user is loged in, let the user add comment, Like or Dislike
+         the blog#}
+        {% if show_comment %}
+
+            <br>
+            <br>
+
+{#            like ot dislike on the blog ------------------------------------#}
+            <form method="post" class="col-sm-12 col-md-12 likeIt-form">
+
+                {% if show_likes %}
+                    {% if not already_voted %}
+                <button type="submit" class="btn btn-info btn-lg" name="likeIt"
+                        value="likedIt">
+                    <i class="btn glyphicon glyphicon-thumbs-up"></i>
+                </button>
+
+                <button type="submit" class="btn btn-warning btn-lg"
+                        name="likeIt"
+                        value="dislikedIt">
+                    <i class="btn glyphicon glyphicon-thumbs-down"></i>
+                </button>
+                    {% endif %}
+                {% endif %}
+
+                <br>
+                <br>
+
+{#            Comment on the blog --------------------------------------------#}
+                <label for="comment">Comment:</label>
+                <textarea class="form-control"
+                          rows="5"
+                          name="blogComment"
+                          id="comment-box"></textarea>
+                <input class="btn btn-primary btn-lg" type="submit">
+
+            </form>
+
+        {% endif %}
+
+        {% if comments %}
+            {% for comment in comments %}
+
+                <div class="col-sm-12 col-md-12">
+                    {% set commenter = comment.commenter.capitalize() %}
+                    <h3>{{ commenter }}:</h3>
+                    <p>{{ comment.comment }}</p>
+                        {% set posted_date = comment.comment_date.isoformat().split(" ")[0] %}
+                        {% set posted_date = posted_date.split("T")[0] %}
+                    <p class="article-date">{{ posted_date }}</p>
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <hr class="divider">
+                    <br>
+                </div>
+
+            {% endfor %}
+        {% endif %}
+
+    </div>
+
+{% endblock %}

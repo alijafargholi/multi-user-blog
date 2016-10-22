@@ -1,0 +1,76 @@
+{#BASE HTML TEMPLATE#}
+{% extends "base.html" %}
+
+{#TITLE BLOCK#}
+{% block title %}
+
+    Welcome To Simple Blog
+
+{% endblock %}
+
+{#CONTENT BLOCK#}
+{% block content %}
+
+    <h1>Welcome to Simple Blog Post, {{ username }}</h1>
+    <form method="post">
+
+        <input type="submit"
+               class="btn btn-info select-blogs"
+               name="blogs"
+               value="Show All Blogs">
+
+        <input type="submit"
+               class="btn btn-primary select-blogs"
+               name="blogs"
+               value="Show My Blogs">
+
+        <input type="submit"
+               class="btn btn-primary select-blogs"
+               name="blogs"
+               value="Show My Likes">
+
+    </form>
+
+    {% if blogs %}
+    <div class="row">
+        {% for blog in blogs %}
+
+        <div class="article-date col-sm-12  col-md-12">
+            {% set posted_date = blog.post_date.isoformat().split(" ")[0] %}
+            {% set posted_date = posted_date.split("T")[0] %}
+            {{ posted_date }}
+        </div>
+
+        <div class="col-sm-12 col-md-12 header">
+            <a href="/{{ blog.key.id() }}">
+                <h1 class="title">{{ blog.title }}</h1>
+            </a>
+        </div>
+
+        <div class="col-sm-12">
+            <blockquote >
+                <p>{{ blog.description }}</p>
+                <footer>{{ blog.blogger }}</footer>
+            </blockquote>
+        </div>
+
+        <div class="blog-info col-sm-12">
+            <div class="glyphicon glyphicon-thumbs-up">
+                {{ blog.likes }}
+            </div>
+            <div class="glyphicon glyphicon-thumbs-down dislike">
+                {{ blog.dislikes}}
+            </div>
+        </div>
+
+        <div class="col-sm-12 col-md-12">
+            <hr class="divider">
+            <br>
+        </div>
+
+        {% endfor %}
+        </div>
+    {% endif %}
+
+
+{% endblock %}
