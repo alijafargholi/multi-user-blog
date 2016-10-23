@@ -78,6 +78,17 @@ def verify_email(pass_phrase):
     return ""
 
 
+def user_authentication(user_hashed_id):
+    """ Validate the user id authentication.
+
+    :param user_hashed_id: (str) hashed user id in.
+    :return: (RegisterUser) RegisterUser entity if it exists.
+    """
+
+    user = RegisterUser.get_user(user_hashed_id)
+    return user or None
+
+
 class RegisterUser(ndb.Model):
     """ Adding a new user to the database.
 
@@ -164,11 +175,13 @@ class Comments(ndb.Model):
 
     :param commenter: (str) username of the person who commented on the blog.
     :param blog_id: (int) blog's id which receiving the comment.
+    :param commenter_id: (int) commenter's id which posting the comment.
     :param comment: (Str) Comment.
     """
 
     commenter = ndb.StringProperty(required=True)
     blog_id = ndb.IntegerProperty(required=True)
+    commenter_id = ndb.IntegerProperty(required=True)
     comment = ndb.TextProperty(required=True)
     comment_date = ndb.DateTimeProperty(auto_now_add=True)
 
@@ -259,7 +272,7 @@ class MainHandler(Handler):
 
         # Make sure the user's id cookie is valid and there is a user with
         # that user_id exists in the database
-        if user_id and RegisterUser.get_user(user_id):
+        if user_id and user_authentication(user_id):
             self.redirect('/welcome')
         # If can't find the user id that means no user is logged in,
         # so redirect the user to the log in page
@@ -284,7 +297,7 @@ class WelcomeHandler(Handler):
         user_id = self.request.cookies.get("user_id")
 
         if user_id:
-            user = RegisterUser.get_user(user_id)
+            user = user_authentication(user_id)
 
             if user:
                 # If the user is valid, find and render the blogs.
@@ -424,7 +437,8 @@ class SignUpHandler(Handler):
 
                 # Redirecting the user to the homepage
                 self.response.set_cookie('user_id', hashed_user)
-                self.redirect('/welcome')
+                self.redirect('/')
+                return
 
 
 class LoginHandler(Handler):
@@ -433,14 +447,10 @@ class LoginHandler(Handler):
     def get(self):
         user_id = self.request.cookies.get("user_id")
         # If the user is already logged in, send the user to the home page
-        if user_id:
-            user = RegisterUser.get_user(user_id)
-            if user:
-                self.redirect("/welcome")
-            else:
-                self.render("login.html")
-        else:
+        if not user_id or not user_authentication(user_id):
             self.render("login.html")
+        else:
+            self.redirect("/welcome")
 
     def post(self):
         # Get input from user
@@ -487,30 +497,33 @@ class NewBlogPostHandler(Handler):
 
         # If the user is not logged in send the user to the log in page.
         user_id = self.request.cookies.get("user_id")
-        if user_id:
-            user = RegisterUser.get_user(user_id)
-            if user:
-                self.render('new_post.html', logged_in=True)
-            else:
-                self.redirect("/login")
-        else:
+        if not user_id or not user_authentication(user_id):
             self.redirect("/login")
+        else:
+            self.render('new_post.html', logged_in=True)
 
     def post(self):
         """ Add the blog post to the data base.
         """
 
+        user_id = self.request.cookies.get("user_id")
+
+        # If the user cookie doesn't exist or the user doesn't exist in the
+        # database, redirect the user to the login page
+        if not user_id or not user_authentication(user_id):
+            self.redirect("/login")
+            return
+
         # Getting the blog post info from the form
         title = self.request.get('title')
         blog = self.request.get('blog')
-        user = self.request.cookies.get("user_id")
         description = self.request.get('description')
         tags = self.request.get('tags')
-        blogger = RegisterUser.get_user(user)
+        blogger = RegisterUser.get_user(user_id)
         username = blogger.username
 
-        # Making sure user inputs all the required inputes.
-        if not title or not blog or not user or not description:
+        # Making sure user inputs all the required inputs.
+        if not title or not blog or not blogger or not description:
             if not title:
                 title_error = "Title is required to submit the blog"
             else:
@@ -541,7 +554,7 @@ class NewBlogPostHandler(Handler):
         new_post = NewPost(title=cgi.escape(title, quote=True),
                            blogger=username,
                            blog=cgi.escape(blog, quote=True),
-                           user_id=RegisterUser.get_id(user),
+                           user_id=RegisterUser.get_id(user_id),
                            description=cgi.escape(description, quote=True),
                            tag=cgi.escape(tags, quote=True))
 
@@ -558,14 +571,14 @@ class ViewBlogPostHandler(Handler):
     def get(self, blog_id):
         """ Render the blog post.
 
-        :param blog_id:
+        :param blog_id: (int) blog id number.
         """
 
         blog = NewPost.get_by_id(int(blog_id))
 
         # If the blog id is not found redirect the user to 404 page
         if not blog:
-            self.error(404)
+            self.redirect('/foo-bar')
             return
 
         # Before loading the page, setting up some restriction for if user is
@@ -575,6 +588,8 @@ class ViewBlogPostHandler(Handler):
             show_comment = True
 
             blog_user_id = blog.user_id
+            user_key_id = int(RegisterUser.get_user(user_id).key.id())
+            already_voted = LikeIt.get_by_blog_id(int(blog_id), user_key_id)
 
             if blog_user_id == RegisterUser.get_user(user_id).key.id():
                 show_like_button = False
@@ -582,14 +597,13 @@ class ViewBlogPostHandler(Handler):
             else:
                 show_like_button = True
                 can_edit = False
-            user_key_id = int(RegisterUser.get_user(user_id).key.id())
-            already_voted = LikeIt.get_by_blog_id(int(blog_id), user_key_id)
 
         else:
             show_comment = False
             show_like_button = True
             can_edit = False
             already_voted = False
+            user_key_id = None
 
         author = RegisterUser.get_by_id(blog.user_id)
         posted_date = str(blog.post_date)
@@ -607,7 +621,8 @@ class ViewBlogPostHandler(Handler):
                     comments=comments,
                     already_voted=already_voted,
                     can_edit=can_edit,
-                    logged_in=True)
+                    logged_in=True,
+                    user_key=user_key_id)
 
     def post(self, *args):
         """ Handling the likes, dislike, comments, and edit requests."""
@@ -625,6 +640,18 @@ class ViewBlogPostHandler(Handler):
             return
 
         if like and user:
+
+            target_blog = NewPost.get_by_id(int(blog_id))
+            if target_blog.user_id == user.key.id():
+                self.render("/{0}".format(blog_id),
+                            like_error="This is your own blog. You can't ")
+                return
+
+            if LikeIt.get_by_blog_id(target_blog.user_id, user.key.id()):
+                self.render("/{0}".format(blog_id),
+                            like_error="You've already voted for this blog.")
+                return
+
             if like == "likedIt":
                 # add like to the database
                 like = LikeIt(blog_id=int(blog_id),
@@ -633,7 +660,6 @@ class ViewBlogPostHandler(Handler):
                 like.put()
 
                 # Update the blog like/dislike
-                target_blog = NewPost.get_by_id(int(blog_id))
                 target_blog.likes += 1
                 target_blog.put()
 
@@ -646,7 +672,6 @@ class ViewBlogPostHandler(Handler):
                 like.put()
 
                 # Update the blog like/dislike
-                target_blog = NewPost.get_by_id(int(blog_id))
                 target_blog.dislikes += 1
                 target_blog.put()
 
@@ -664,10 +689,11 @@ class ViewBlogPostHandler(Handler):
 
                 new_comment = Comments(commenter=commenter,
                                        blog_id=int(blog_id),
+                                       commenter_id=int(user.key.id()),
                                        comment=comment,)
                 new_comment.put()
 
-            self.redirect("/{0}".format(blog_id))
+        self.redirect("/{0}".format(blog_id))
 
 
 class EditBlogPostHandler(Handler):
@@ -680,6 +706,10 @@ class EditBlogPostHandler(Handler):
 
         blog_id = args[0]
         target_blog = NewPost.get_by_id(int(blog_id))
+
+        if not target_blog:
+            self.redirect('/foo-bar')
+            return
 
         blog_user_id = target_blog.user_id
 
@@ -698,11 +728,20 @@ class EditBlogPostHandler(Handler):
 
     def post(self, *args):
 
+        user_id = self.request.cookies.get("user_id")
+        user = user_authentication(user_id)
+
         blog_id = args[0]
         target_blog = NewPost.get_by_id(int(blog_id))
+
+        # If user is not Authentication or not Authorization, move out
+        if not user_id or not user or not user.key.id() == target_blog.user_id:
+            self.redirect("/")
+            return
+
         action = self.request.get("done")
 
-        # Saving the changes on the blog in the databse
+        # Saving the changes on the blog in the database
         if action == "Save":
 
             title = self.request.get('title')
@@ -742,6 +781,85 @@ class EditBlogPostHandler(Handler):
             self.redirect("/")
 
 
+class EditCommentHandler(Handler):
+    """ Render and handle the Edit Comment page  and its requests."""
+
+    def get(self, comment_id):
+
+        user_id = self.request.cookies.get("user_id")
+
+        # If the user is not logged in, move it to login page
+        if not user_id or not user_authentication(user_id):
+            self.redirect('/login')
+            return
+
+        user_key = RegisterUser.get_id(user_id)
+        comment = Comments.get_by_id(int(comment_id))
+
+        if not comment:
+            self.redirect("/foo-bar")
+            return
+
+        if comment.commenter_id == user_key:
+            # If this is not the user's comment, kick the user out
+            can_edit = True
+        else:
+            # If this is the user's comments, let him do his thing, it's cool.
+            can_edit = False
+
+        self.render("edit-comment.html",
+                    comment=comment,
+                    can_edit=can_edit)
+
+    def post(self, comment_id):
+
+        user_id = self.request.cookies.get("user_id")
+        user_key = RegisterUser.get_id(user_id)
+        comment = Comments.get_by_id(int(comment_id))
+
+        if comment.commenter_id == user_key:
+            # If this is the user's comments, let him do his thing, it's cool.
+            can_edit = True
+        else:
+            # If this is not the user's comment, kick the user out
+            can_edit = False
+
+        action = self.request.get("done")
+
+        # Saving the changes on the blog in the databse
+        if action == "Save":
+
+            if can_edit:
+
+                new_comment = self.request.get('blogComment')
+                comment.comment = new_comment
+
+                comment.put()
+
+            self.redirect("/{}".format(comment.blog_id))
+            return
+
+        # If the user canceled, go back to the blog
+        elif action == "Cancel":
+            self.redirect("/{}".format(comment.blog_id))
+            return
+
+        # If user requests to delete the post
+        else:
+            # Deleting the comments
+            if can_edit:
+                comment.key.delete()
+            self.redirect("/{}".format(comment.blog_id))
+
+
+class NotFoundHandler(Handler):
+    """ If the requested blog does not exits, render 404 error page.
+    """
+
+    def get(self):
+        self.render("blog-not-found.html")
+
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/signup', SignUpHandler),
@@ -751,4 +869,6 @@ app = webapp2.WSGIApplication([
     ('/new-post', NewBlogPostHandler),
     ('/([0-9]+)', ViewBlogPostHandler),
     ('/edit-post/([0-9]+)', EditBlogPostHandler),
+    ('/edit-comment/([0-9]+)', EditCommentHandler),
+    ('/foo-bar', NotFoundHandler),
 ], debug=True)

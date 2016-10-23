@@ -71,6 +71,9 @@
                 {% endif %}
 
                 <br>
+                <div class="col-sm-12 col-md-12">
+                    {{ like_error }}
+                </div>
                 <br>
 
 {#            Comment on the blog --------------------------------------------#}
@@ -88,15 +91,25 @@
 
         {% if comments %}
             {% for comment in comments %}
-
                 <div class="col-sm-12 col-md-12">
+
                     {% set commenter = comment.commenter.capitalize() %}
                     <h3>{{ commenter }}:</h3>
+
+                    {% if comment.commenter_id == user_key %}
+                        <a class="btn btn-default pull-right"
+                           href="/edit-comment/{{ comment.key.id() }}">
+                            Edit
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="col-sm-12 col-md-12">
                     <p>{{ comment.comment }}</p>
                         {% set posted_date = comment.comment_date.isoformat().split(" ")[0] %}
                         {% set posted_date = posted_date.split("T")[0] %}
                     <p class="article-date">{{ posted_date }}</p>
                 </div>
+
                 <div class="col-sm-12 col-md-12">
                     <hr class="divider">
                     <br>

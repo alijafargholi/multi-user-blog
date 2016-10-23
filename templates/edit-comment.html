@@ -1,0 +1,46 @@
+{#BASE HTML TEMPLATE#}
+{% extends "base.html" %}
+
+{#TITLE BLOCK#}
+{% block title %}
+
+    Welcome To Simple Blog
+
+{% endblock %}
+
+{#CONTENT BLOCK#}
+{% block content %}
+    {% if can_edit %}
+        <h1>Edit Comment</h1>
+        {% if comment %}
+            <form method="post">
+
+                <div class="row">
+                    <div class="form-group col-md-12 col-xs-12">
+                    <label for="comment">Comment:</label>
+                        <textarea class="form-control"
+                                  rows="5"
+                                  name="blogComment"
+                                  id="comment-box">{{ comment.comment }}</textarea>
+                    </div>
+                </div>
+
+                <input type="submit" class="btn btn-success btn-lg" name="done"
+                       value="Save">
+                <input type="submit" class="btn btn-warning btn-lg" name="done"
+                       value="Cancel">
+                <input type="submit" class="btn btn-danger btn-lg pull-right" name="done"
+                       value="Delete This Comment">
+            </form>
+        {% endif %}
+    {% else %}
+        <div>
+            <h1>Can't touch this</h1>
+            <div class="embed-responsive embed-responsive-16by9" >
+                <iframe class="embed-responsive-item"  src="https://www.youtube.com/embed/a5eGNqajqnM"></iframe>
+            </div>
+
+        </div>
+    {% endif %}
+
+{% endblock %}
