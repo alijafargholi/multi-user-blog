@@ -702,6 +702,11 @@ class EditBlogPostHandler(Handler):
     def get(self, *args, **kwargs):
 
         user_id = self.request.cookies.get("user_id")
+
+        if not user_id and not user_authentication(user_id):
+            self.redirect("/login")
+            return
+
         user_key = RegisterUser.get_id(user_id)
 
         blog_id = args[0]
@@ -809,11 +814,17 @@ class EditCommentHandler(Handler):
 
         self.render("edit-comment.html",
                     comment=comment,
-                    can_edit=can_edit)
+                    can_edit=can_edit,
+                    logged_in=True)
 
     def post(self, comment_id):
 
         user_id = self.request.cookies.get("user_id")
+
+        if not user_id and not user_authentication(user_id):
+            self.redirect("/login")
+            return
+
         user_key = RegisterUser.get_id(user_id)
         comment = Comments.get_by_id(int(comment_id))
 
@@ -857,7 +868,11 @@ class NotFoundHandler(Handler):
     """
 
     def get(self):
-        self.render("blog-not-found.html")
+        user_id = self.request.cookies.get("user_id")
+        if user_id and user_authentication(user_id):
+            self.render("blog-not-found.html", logged_in=True)
+        else:
+            self.redirect('/login')
 
 
 app = webapp2.WSGIApplication([
